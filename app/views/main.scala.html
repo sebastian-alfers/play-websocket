@@ -1,0 +1,69 @@
+@(title: String)(content: Html)
+
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>@title</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
+        <script src="@routes.Assets.versioned("javascripts/matter-0.8.0.min.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <h2>Hello</h2>
+<script type="text/javascript">
+    var exampleSocket = new WebSocket("ws://localhost:9000/ws", "protocolOne");
+
+    exampleSocket.onopen = function (event) {
+
+        exampleSocket.onmessage = function (event) {
+          console.log(event.data);
+        }
+
+        exampleSocket.send("Here's some text that the server is urgently awaiting!");
+
+        // Send text to all users through the server
+        function sendText() {
+          // Construct a msg object containing the data the server needs to process the message from the chat client.
+          var msg = {
+            type: "message",
+            text: "super text",
+            id:   111,
+            date: Date.now()
+          };
+
+          // Send the msg object as a JSON-formatted string.
+          exampleSocket.send(JSON.stringify(msg));
+
+          // Blank the text input element, ready to receive the next line of text from the user.
+          document.getElementById("text").value = "";
+        }
+
+    };
+
+
+// Matter.js module aliases
+var Engine = Matter.Engine,
+    World = Matter.World,
+    Bodies = Matter.Bodies;
+
+// create a Matter.js engine
+var engine = Engine.create(document.body);
+
+// create two boxes and a ground
+var boxA = Bodies.rectangle(400, 200, 80, 80);
+var boxB = Bodies.rectangle(450, 50, 80, 80);
+var ground = Bodies.rectangle(200, 610, 810, 60, { isStatic: true });
+
+// add all of the bodies to the world
+World.add(engine.world, [boxA, boxB, ground]);
+
+// run the engine
+Engine.run(engine);
+
+</script>
+
+
+
+    </body>
+</html>
