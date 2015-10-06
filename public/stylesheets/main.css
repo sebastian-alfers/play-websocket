@@ -24,3 +24,13 @@
 .selected{
     color:#ff0000;
 }
+
+#infoLog {
+    height:520px;
+    width: 400px;
+    scroll:auto;
+}
+
+#infoLogContainer{
+    overflow-y: scroll;
+}

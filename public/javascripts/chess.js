@@ -147,8 +147,6 @@ var ChessBoardRow = React.createClass({
 
 var ChessBoard = React.createClass({
 
-
-
     render: function() {
         var rows = this.props.rows;
         var columns = this.props.columns;
@@ -160,19 +158,39 @@ var ChessBoard = React.createClass({
            })}
         </div>
                 );
-
-
     }
 });
 
 var Info = React.createClass({
 
-    updateInfo: function(){
-        alert('new info');
+    onMsgOut: function(msg) {
+        console.log(msg);
+        newLog = "--> " +JSON.stringify(msg);
+        state = this.state.outLog;
+        state.unshift(newLog);
+        console.log(state);
+        this.setState({outLog: state});
     },
 
+	getInitialState: function() {
+
+	    this.props.socketService.addOnMsgOut(this.onMsgOut);
+		return {
+			content: "---- web-socket logs ----",
+			inLog: ["aaasdfadsf", "bbb"],
+			outLog: []
+		};
+	},
+
     render: function(){
-        return <div>infooozz: {this.props.hoverField} - {this.props.infoText}</div>;
+        var items = this.state.outLog.map((function(item) {
+            return <li>{item}</li>;
+         }).bind(this));
+
+        return (<div>
+            <h2>Debug Window</h2>
+            <ul>{items}</ul>
+            </div>);
     }
 });
 
@@ -186,28 +204,29 @@ var Root = React.createClass({
 
     doSelect: function(newSelected){
         if(this.state.currentSelected != null){
-            console.log(this.state.currentSelected);
-            console.log('****');
             this.state.currentSelected.unSelect();
         }
         this.setState({currentSelected: newSelected});
+
+        msg = {key: newSelected.props.field}
+        socketService.setState(msg);
     },
 
     render: function(){
         return (
-            <div>
-                <ChessBoard doSelect={this.doSelect} rows={rows()} columns={columns()}/>
-                <Info hoverField="fffield" infoText="JEA" />
-            </div>
+            <table><tr>
+                <td><ChessBoard doSelect={this.doSelect} rows={rows()} columns={columns()}/></td>
+                <td id="infoLogContainer"><div id="infoLog"><Info socketService={socketService} /></div></td>
+            </tr></table>
         );
     }
 });
 
+var socketService = new SocketService();
 
 React.render(
     <div>
-        <Root />
+        <Root socketService={socketService} />
     </div>,
     document.getElementById('content')
 );
-
