@@ -3,7 +3,12 @@ package actors
 import akka.actor.{ActorRef, Props, Actor}
 import play.api.Logger
 
+import scala.collection.mutable
+
 object WS {
+
+  val actors: mutable.Seq[ActorRef] = mutable.Seq.empty
+
   def props(out: ActorRef) = Props(new WS(out))
 }
 
