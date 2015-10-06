@@ -21,7 +21,10 @@ function SocketService() {
             connected = false;
 		};
 		ws.onmessage = function (message) {
-            console.log("got message");
+            var arrayLength = onMsgInListener.length;
+            for (var i = 0; i < arrayLength; i++) {
+                onMsgInListener[i](message.data);
+            }
 		};
 	}
 
@@ -46,9 +49,16 @@ function SocketService() {
         onMsgOutListener.push(callback);
     }
 
+    var onMsgInListener = [];
+    function addOnMsgIn(callback){
+        console.log("added onMsgInListener callback listener: " . callback);
+        onMsgInListener.push(callback);
+    }
+
     //private
     function call(msg){
         //fist: send via WS
+        ws.send(JSON.stringify(msg));
 
         //second: inform listener
         var arrayLength = onMsgOutListener.length;
@@ -59,6 +69,7 @@ function SocketService() {
 
     service.setState = setState;
     service.addOnMsgOut = addOnMsgOut;
+    service.addOnMsgIn = addOnMsgIn;
 
     return service;
 }
