@@ -27,8 +27,16 @@ function SocketService() {
 
 	init();
 
+    function wrapMessage(msgType, msg){
+        return {
+            type: msgType,
+            payload: msg
+        }
+    }
+
 	function setState(msg){
 	    console.log('call setState()');
+	    msg = wrapMessage("select", msg);
 	    call(msg);
 	}
 
