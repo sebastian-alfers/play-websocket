@@ -3,7 +3,9 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
+GET     /                           controllers.Application.hello
+
+GET     /workshop                           controllers.Application.index
 
 GET /ws                              controllers.Application.ws
 

@@ -23,6 +23,10 @@ class Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
 
+  def hello = Action {
+    Ok("It works!")
+  }
+
 
   def ws = WebSocket.acceptWithActor[String, String] { request => out : ActorRef =>
     val props = WebserviceConnection.props(out)
