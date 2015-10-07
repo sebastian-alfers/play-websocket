@@ -1,6 +1,7 @@
 package controllers
 
-import actors.{WebserviceConnection, WebserviceConnection$}
+
+import actors.WebSocketConnection
 import play.api._
 import play.api.libs.iteratee.{Concurrent, Enumerator, Iteratee}
 import play.api.mvc._
@@ -29,7 +30,7 @@ class Application extends Controller {
 
 
   def ws = WebSocket.acceptWithActor[String, String] { request => out : ActorRef =>
-    val props = WebserviceConnection.props(out)
+    val props = WebSocketConnection.props(out)
     props
   }
 
