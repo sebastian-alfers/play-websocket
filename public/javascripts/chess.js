@@ -73,11 +73,11 @@ function columns() {
 var Field = React.createClass({
 
     mouseOver: function () {
-        this.props.currentHover(this);
+        this.props.root.currentHover(this);
     },
 
     mouseOut: function () {
-        this.props.currentHover(null);
+        this.props.root.currentHover(null);
     },
 
 	getInitialState: function() {
@@ -97,9 +97,12 @@ var Field = React.createClass({
 	getInitialState: function(){
 	    var piece = getPiece(this.props.field);
 	    if(piece != undefined){
+	        //send this piece on this field to akka
+	        this.props.root.setPieceToField(piece.name, this.props.field);
+	        
             return{
                 fieldIcon: piece.code,
-                fieldType: piece.name
+                pieceName: piece.name
             }
 	    }
 	    else{
@@ -109,7 +112,7 @@ var Field = React.createClass({
 
     onClick: function(currentField){
         this.setState({selectedClass: "selected"});
-        this.props.doSelect(this);
+        this.props.root.doSelect(this);
     },
 
     render: function(){
@@ -120,13 +123,13 @@ var Field = React.createClass({
 var WhiteField = React.createClass({
 
     render: function(){
-        return(<Field currentHover={this.props.currentHover} doSelect={this.props.doSelect} className="box white" field={this.props.field}  />)
+        return(<Field root={this.props.root} className="box white" field={this.props.field}  />)
     }
 });
 
 var BlackField = React.createClass({
     render: function(){
-        return(<Field currentHover={this.props.currentHover} doSelect={this.props.doSelect} className="box black" field={this.props.field} />)
+        return(<Field root={this.props.root} className="box black" field={this.props.field} />)
     }
 });
 
@@ -134,10 +137,10 @@ var ChessBoardField = React.createClass({
     render: function(){
         var field = ""+this.props.rowChar+""+this.props.colNumber;
         if(this.props.fieldId % 2 == 0){
-            return(<WhiteField currentHover={this.props.currentHover} doSelect={this.props.doSelect} field={field}/>);
+            return(<WhiteField root={this.props.root} field={field}/>);
         }
         else{
-          return(<BlackField currentHover={this.props.currentHover} doSelect={this.props.doSelect} field={field} />);
+          return(<BlackField root={this.props.root} field={field} />);
         }
     }
 });
@@ -150,7 +153,7 @@ var ChessBoardRow = React.createClass({
         return(
         <div className="row">
         {this.props.columns.map(function(i) {
-                  return <ChessBoardField currentHover={parent.props.currentHover} doSelect={parent.props.doSelect} key={i} fieldId={i+row.charCodeAt(0)} rowChar={row} colNumber={i} />;
+                  return <ChessBoardField  root={parent.props.root} key={i} fieldId={i+row.charCodeAt(0)} rowChar={row} colNumber={i} />;
         })}
         </div>
     );
@@ -166,7 +169,7 @@ var ChessBoard = React.createClass({
         return(
         <div>
            {rows.map(function(i) {
-                     return <ChessBoardRow  key={i} row={i} currentHover={parent.props.currentHover} doSelect={parent.props.doSelect} columns={columns} />;
+                     return <ChessBoardRow  key={i} row={i} root={parent.props.root} columns={columns} />;
            })}
         </div>
                 );
@@ -203,8 +206,8 @@ var Info = React.createClass({
 	},
 
     render: function(){
-        var items = this.state.eventLog.map((function(item) {
-            return <li>{item}</li>;
+        var items = this.state.eventLog.map((function(item, i) {
+            return <li id={i}>{item}</li>;
          }).bind(this));
 
         return (<div>
@@ -231,8 +234,8 @@ var Root = React.createClass({
         }
 
         var label = "Field:" +field.props.field;
-        if(field.state != undefined && field.state.fieldType != undefined){
-            label += ", " + field.state.fieldType;
+        if(field.state != undefined && field.state.pieceName != undefined){
+            label += ", " + field.state.pieceName;
         }
         this.setState({currentHover: label});
     },
@@ -243,25 +246,34 @@ var Root = React.createClass({
         }
         this.setState({currentSelected: newSelected});
 
-        msg = {field: newSelected.props.field, type: newSelected.state.fieldType}
+        msg = {field: newSelected.props.field, type: newSelected.state.pieceName}
         socketService.setState(msg);
+    },
+
+    setPieceToField: function(pieceName, field){
+        console.log(field);
+        socketService.setPieceToField(pieceName, field);
     },
 
     render: function(){
         return (
             <table><tr>
-                <td><ChessBoard currentHover={this.currentHover} doSelect={this.doSelect} rows={rows()} columns={columns()}/></td>
                 <td id="infoLogContainer"><div id="infoLog"><Info currentHoverLabel={this.state.currentHover} socketService={socketService} /></div></td>
+                <td><ChessBoard root={this} rows={rows()} columns={columns()}/></td>
             </tr></table>
         );
     }
 });
 
-var socketService = new SocketService();
+var onReady = function(){
+    React.render(
+        <div>
+            <Root socketService={socketService} />
+        </div>,
+        document.getElementById('content')
+    );
+}
 
-React.render(
-    <div>
-        <Root socketService={socketService} />
-    </div>,
-    document.getElementById('content')
-);
+var socketService = new SocketService(onReady);
+
+

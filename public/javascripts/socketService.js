@@ -3,7 +3,7 @@
 /**
  * https://github.com/maxnachlinger/reactjs-websocket-example/blob/master/client/src/socketService.js
  */
-function SocketService() {
+function SocketService(onReadyCallback) {
 	var service = {};
     var connected = false;
 	var ws;
@@ -15,6 +15,8 @@ function SocketService() {
 		ws.onopen = function () {
             console.log("got onopen");
             connected = true;
+            console.log(onReadyCallback);
+            onReadyCallback();
 		};
 		ws.onclose = function() {
             console.log("got onclose");
@@ -43,15 +45,20 @@ function SocketService() {
 	    call(msg);
 	}
 
+    function setPieceToField(pieceType, fieldName){
+        var msg = wrapMessage("setPieceToField", {pieceType: pieceType, fieldName: fieldName});
+        call(msg);
+    }
+
     var onMsgOutListener = [];
     function addOnMsgOut(callback){
-        console.log("added onMsgOutListener callback listener: " . callback);
+        console.log("added onMsgOutListener callback listener: " + callback);
         onMsgOutListener.push(callback);
     }
 
     var onMsgInListener = [];
     function addOnMsgIn(callback){
-        console.log("added onMsgInListener callback listener: " . callback);
+        console.log("added onMsgInListener callback listener: " + callback);
         onMsgInListener.push(callback);
     }
 
@@ -70,6 +77,7 @@ function SocketService() {
     service.setState = setState;
     service.addOnMsgOut = addOnMsgOut;
     service.addOnMsgIn = addOnMsgIn;
+    service.setPieceToField = setPieceToField;
 
     return service;
 }
