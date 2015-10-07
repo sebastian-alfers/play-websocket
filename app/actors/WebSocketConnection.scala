@@ -31,9 +31,14 @@ class WebSocketConnection(out: ActorRef) extends Actor {
         case "setPieceToField" => onSetPieceToFieldMsg(payload)
         case _ => println(s"Error! websocket sent unknown type '${requestType}'")
       }
-    case item :Error => {
+    case item:Error => {
       println(s"got error message: '${item.message}'. Forward to frontedn...")
       val json = Json.toJson(item)
+      out ! json.toString()
+    }
+    case msg: BackendReady => {
+      val json = Json.toJson(msg)
+      println(s"do it to out jo ${json}")
       out ! json.toString()
     }
     case a: Any => println(s"not able to process message: ${a.getClass}")

@@ -6,12 +6,14 @@ object InMessages {
   implicit val SetPieceToFieldReads = Json.reads[SetPieceToField]
 
   object FromChessField
-  
-  
+
 }
 
 object OutMessages{
   trait BaseOutMsg{var msgType: String}
   case class Error(override var msgType:String = "error", message: String) extends BaseOutMsg
   implicit val ErrorWrites = Json.writes[Error]
+
+  case class BackendReady(override var msgType: String = "backendReady") extends BaseOutMsg
+  implicit val BackendReadWrites = Json.writes[BackendReady]
 }

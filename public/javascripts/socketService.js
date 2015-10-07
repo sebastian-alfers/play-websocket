@@ -23,6 +23,7 @@ function SocketService(onReadyCallback) {
             connected = false;
 		};
 		ws.onmessage = function (message) {
+		    console.log(message);
             var arrayLength = onMsgInListener.length;
             for (var i = 0; i < arrayLength; i++) {
                 onMsgInListener[i](JSON.parse(message.data));

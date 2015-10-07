@@ -185,7 +185,7 @@ var Info = React.createClass({
 
     onMsgIn: function(msg) {
         inSign = "<-- "
-        msgText = inSign + JSON.stringify(msg);
+        newLog = inSign + JSON.stringify(msg);
 
         if(msg.msgType == "error"){
             newLog = <span className="error">{inSign}{msg.message}</span>
