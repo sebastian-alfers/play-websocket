@@ -34,3 +34,7 @@
 #infoLogContainer{
     overflow-y: scroll;
 }
+
+.error{
+    color:#ff0000;
+}

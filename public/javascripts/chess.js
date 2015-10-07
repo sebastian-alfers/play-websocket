@@ -184,8 +184,14 @@ var Info = React.createClass({
     },
 
     onMsgIn: function(msg) {
-        newLog = "<-- " +JSON.stringify(msg);
-        this.prependLog(newLog);
+        inSign = "<-- "
+        msgText = inSign + JSON.stringify(msg);
+
+        if(msg.msgType == "error"){
+            newLog = <span className="error">{inSign}{msg.message}</span>
+        }
+
+        this.prependLog(<div>{newLog}</div>);
     },
 
     prependLog: function(msg){

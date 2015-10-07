@@ -25,7 +25,7 @@ function SocketService(onReadyCallback) {
 		ws.onmessage = function (message) {
             var arrayLength = onMsgInListener.length;
             for (var i = 0; i < arrayLength; i++) {
-                onMsgInListener[i](message.data);
+                onMsgInListener[i](JSON.parse(message.data));
             }
 		};
 	}

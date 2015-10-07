@@ -3,8 +3,8 @@ package actors
 import akka.actor.Actor.emptyBehavior
 import play.api.libs.json._
 import akka.actor.{ActorRef, Props, Actor}
-import play.api.Logger
-import Messages._
+import InMessages._
+import OutMessages._
 
 /**
  * companion object -> kind of factory for the class
@@ -15,7 +15,7 @@ object WebSocketConnection {
 
 class WebSocketConnection(out: ActorRef) extends Actor {
 
-  val chessFieldActor = context.system.actorOf(Props[ChessField])
+  val chessFieldActor = context.actorOf(Props[ChessField])
 
   def receive = {
     case msg: String =>
@@ -24,24 +24,34 @@ class WebSocketConnection(out: ActorRef) extends Actor {
       val requestType = (json \ "type" ).get.toString()
       val payload = (json \ "payload" ).get
 
+      println(s"json in actor: ${self.path}}")
+
       //forward base on type of message
-      requestType match {
+      requestType.replace("\"", "") match {
         case "setPieceToField" => onSetPieceToFieldMsg(payload)
         case _ => println(s"Error! websocket sent unknown type '${requestType}'")
       }
-
-    case FromChessField => out ! "chess field sacht jo"
+    case item :Error => {
+      println(s"got error message: '${item.message}'. Forward to frontedn...")
+      val json = Json.toJson(item)
+      out ! json.toString()
+    }
+    case a: Any => println(s"not able to process message: ${a.getClass}")
   }
 
   private def onSetPieceToFieldMsg(json: JsValue) = {
-    val item = genericOnMsg[SetPieceToField](json)
+    println("onSetPieceToField")
+    val item = genericOnMsg[SetPieceToField](json)(InMessages.SetPieceToFieldReads)
     item match {
-      case Some(message) => chessFieldActor ! message
+      case Some(message) => {
+        println("to chessFieldActor")
+        chessFieldActor ! message
+      }
       case None => println("not able to parse message")
     }
   }
 
-  private def genericOnMsg[T](json: JsValue): Option[T] = {
+  private def genericOnMsg[T](json: JsValue)(implicit reads: Reads[T]): Option[T] = {
     json.validate[T] match {
       case s: JsSuccess[T] => Some(s.get)
       case e: JsError => {
