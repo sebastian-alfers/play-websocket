@@ -35,15 +35,15 @@ function SocketService(onReadyCallback) {
 
     function wrapMessage(msgType, msg){
         return {
-            type: msgType,
+            msgType: msgType,
             payload: msg
         }
     }
 
 	function setState(msg){
 	    console.log('call setState()');
-	    msg = wrapMessage("select", msg);
-	    call(msg);
+        var msg = wrapMessage("selectField", {pieceType: msg.type, fieldName: msg.field});
+        call(msg);
 	}
 
     function setPieceToField(pieceType, fieldName){

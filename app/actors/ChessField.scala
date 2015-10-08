@@ -1,6 +1,6 @@
 package actors
 
-import actors.InMessages.{SetPieceToField}
+import actors.InMessages.{PieceFieldSelected, SelectField, SetPieceToField, PieceTypeFieldName}
 import actors.OutMessages.{BackendReady, Error}
 import akka.actor.{ActorRef, Props, Actor}
 
@@ -19,21 +19,11 @@ class ChessField extends Actor{
   def receiveWithPieces(pieces: List[ActorRef]): Receive = {
     case msg: SetPieceToField => {
 
-      //"Die Figur"
-      val pieceType = msg.pieceType.splitAt(5)._2 match {
-        case "King" => King
-        case "Queen" => Queen
-        case "Rock" => Rock
-        case "Bishop" => Bishop
-        case "Knight" => Knight
-        case "Pawn" => Pawn
-      }
+      //"Die Schach-Figur"
+      val pieceType = msg.payload.pieceType.splitAt(5)._2
 
-      val pieceColor = msg.pieceType.startsWith("black") match {
-        case true => Black
-        case false => White
-      }
-      val pieceActor = context.actorOf(Props(classOf[Piece], pieceColor, pieceType))
+      val pieceColor = msg.payload.pieceType
+      val pieceActor = context.actorOf(Props(classOf[Piece], pieceColor, pieceType, msg.payload.fieldName))
       val newActors = pieceActor::pieces
 
       if(newActors.length == 32){
@@ -43,17 +33,46 @@ class ChessField extends Actor{
 
       context.become(receiveWithPieces(newActors))
     }
+    case msg: SelectField => {
+      //check if selection is valid
+      println(s"selected: ${msg}")
+      pieces.foreach { piece =>
+        piece ! msg
+      }
+    }
+
+    case msg: PieceFieldSelected => {
+      //tell parent -> frontend that state has hanged
+      context.parent ! msg
+
+      //change state
+      context.become(receiveWithSelectedField(msg.piece, allPieces = pieces))
+    }
+
     case _ => println("not expected message")
   }
 
+  def receiveWithSelectedField(selectedPiece: ActorRef, allPieces: List[ActorRef]): Receive = {
+    case msg: SelectField => {
+      //a piece is selected, but a new one was chosen
 
-  def messageFromBlackTeam(msg: SetPieceToField) = {
+      //change state
+      context.become(receiveWithPieces(allPieces))
+
+      //and lets send the message
+      self ! msg
+    }
+    case a: Any => println(s"msg not expected in state selectedField: ${a.getClass}")
+  }
+
+
+  def messageFromBlackTeam(msg: PieceTypeFieldName) = {
     println("messageFromBlackTeam")
     //println(s"send msg to parens: ${context.parent.path}")
     //context.parent ! Error(message = "test error black")
   }
 
-  def messageFromWhiteTeam(msg: SetPieceToField) = {
+  def messageFromWhiteTeam(msg: PieceTypeFieldName) = {
     println("messageFromWhiteTeam")
 
   }

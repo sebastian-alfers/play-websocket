@@ -249,6 +249,7 @@ var Root = React.createClass({
     doSelect: function(newSelected){
         if(this.state.currentSelected != null){
             this.state.currentSelected.unSelect();
+            this.setState({currentSelected: null});
         }
         this.setState({currentSelected: newSelected});
 
