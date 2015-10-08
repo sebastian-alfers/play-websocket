@@ -94,7 +94,68 @@ var Field = React.createClass({
 	    return this.props.className + " " + this.state.selectedClass;
 	},
 
+
+
+    onMsgIn: function(msg) {
+        if(msg.msgType == "moveField"){
+            this.movePiece(msg);
+        }
+    },
+
+    movePiece: function(msg){
+        if(msg.oldField == this.props.field){
+            console.log("old: " + this.props.field);
+            window.tmpFieldOld = {fieldIcon: this.state.fieldIcon, pieceName: this.state.pieceName};
+
+            this.setState(
+                function(oldState){
+                    return { fieldIcon:"", pieceName: "" };
+                },
+                function(){
+                    if(null != window.tmpCallback){
+                        window.tmpCallback();
+                        window.tmpCallback = null;
+                    }
+                }
+            );
+
+        }
+        if(msg.newField == this.props.field){
+            window.tmpCallback = null;
+            parent = this;
+            action = function(){
+                console.log("new: " + parent.props.field);
+
+                parent.setState(
+                    function(previousState) {
+                        return {selectedClass: "", fieldIcon: window.tmpFieldOld.fieldIcon, pieceName: window.tmpFieldOld.pieceName };
+                    },
+                    function (){
+                        window.tmpFieldOld =  null;
+
+                        console.log("-------");
+                        console.log(parent.props);
+                        console.log(parent.state);
+                        console.log("-------");
+
+                        parent.props.root.doUnselect(function(){});
+                    }
+                );
+            };
+
+            if(null == window.tmpFieldOld || undefined == window.tmpFieldOld){
+                window.tmpCallback = action;
+            }
+            else{
+                action();
+            }
+        }
+    },
+
 	getInitialState: function(){
+
+	    this.props.socketService.addOnMsgIn(this.onMsgIn);
+
 	    var piece = getPiece(this.props.field);
 	    if(piece != undefined){
 	        //send this piece on this field to akka
@@ -111,8 +172,18 @@ var Field = React.createClass({
 	},
 
     onClick: function(currentField){
-        this.setState({selectedClass: "selected"});
-        this.props.root.doSelect(this);
+        //this.setState({selectedClass: "selected"});
+
+        parent = this
+
+        this.setState(
+            function(previousState) {
+                return {selectedClass: "selected"};
+            },
+            function (){
+                this.props.root.doSelect(parent);
+            }
+        );
     },
 
     render: function(){
@@ -123,13 +194,13 @@ var Field = React.createClass({
 var WhiteField = React.createClass({
 
     render: function(){
-        return(<Field root={this.props.root} className="box white" field={this.props.field}  />)
+        return(<Field root={this.props.root} className="box white" field={this.props.field} socketService={this.props.socketService}   />)
     }
 });
 
 var BlackField = React.createClass({
     render: function(){
-        return(<Field root={this.props.root} className="box black" field={this.props.field} />)
+        return(<Field root={this.props.root} className="box black" field={this.props.field} socketService={this.props.socketService}  />)
     }
 });
 
@@ -137,10 +208,10 @@ var ChessBoardField = React.createClass({
     render: function(){
         var field = ""+this.props.rowChar+""+this.props.colNumber;
         if(this.props.fieldId % 2 == 0){
-            return(<WhiteField root={this.props.root} field={field}/>);
+            return(<WhiteField root={this.props.root} field={field} socketService={this.props.socketService} />);
         }
         else{
-          return(<BlackField root={this.props.root} field={field} />);
+          return(<BlackField root={this.props.root} field={field} socketService={this.props.socketService}  />);
         }
     }
 });
@@ -153,7 +224,7 @@ var ChessBoardRow = React.createClass({
         return(
         <div className="row">
         {this.props.columns.map(function(i) {
-                  return <ChessBoardField  root={parent.props.root} key={i} fieldId={i+row.charCodeAt(0)} rowChar={row} colNumber={i} />;
+                  return <ChessBoardField  root={parent.props.root} key={i} fieldId={i+row.charCodeAt(0)} rowChar={row} colNumber={i} socketService={parent.props.socketService} />;
         })}
         </div>
     );
@@ -169,7 +240,7 @@ var ChessBoard = React.createClass({
         return(
         <div>
            {rows.map(function(i) {
-                     return <ChessBoardRow  key={i} row={i} root={parent.props.root} columns={columns} />;
+                     return <ChessBoardRow  key={i} row={i} root={parent.props.root} columns={columns} socketService={parent.props.socketService} />;
            })}
         </div>
                 );
@@ -184,8 +255,13 @@ var Info = React.createClass({
     },
 
     onMsgIn: function(msg) {
-        newLog = "<-- " +JSON.stringify(msg);
-        this.prependLog(newLog);
+        inSign = "<-- "
+        newLog = <span className="info">{inSign}{JSON.stringify(msg)}</span>
+        if(msg.msgType == "error"){
+            newLog = <span className="error">{inSign}{msg.message}</span>
+        }
+        this.prependLog(<div>{newLog}</div>);
+
     },
 
     prependLog: function(msg){
@@ -240,14 +316,37 @@ var Root = React.createClass({
         this.setState({currentHover: label});
     },
 
-    doSelect: function(newSelected){
+    doUnselect: function(callback){
         if(this.state.currentSelected != null){
             this.state.currentSelected.unSelect();
-        }
-        this.setState({currentSelected: newSelected});
 
-        msg = {field: newSelected.props.field, type: newSelected.state.pieceName}
-        socketService.setState(msg);
+            this.setState(
+                function(previousState) {
+                    return {currentSelected: null};
+                },
+                function (){
+                    callback();
+                }
+            );
+        }
+        else{
+            callback();
+        }
+    },
+
+    doSelect: function(newSelected){
+        parent = this;
+        this.doUnselect(function(){
+            parent.setState(
+                function(previousState) {
+                    return {currentSelected: newSelected};
+                },
+                function (){
+                    msg = {field: newSelected.props.field, type: newSelected.state.pieceName}
+                    socketService.setState(msg);
+                }
+            );
+        });
     },
 
     setPieceToField: function(pieceName, field){
@@ -259,8 +358,22 @@ var Root = React.createClass({
         return (
             <table><tr>
                 <td id="infoLogContainer"><div id="infoLog"><Info currentHoverLabel={this.state.currentHover} socketService={socketService} /></div></td>
-                <td><ChessBoard root={this} rows={rows()} columns={columns()}/></td>
+                <td><ChessBoard root={this} rows={rows()} columns={columns()}  socketService={socketService} /></td>
+                <td><PingPong socketService={socketService} /></td>
             </tr></table>
+        );
+    }
+});
+
+var PingPong = React.createClass({
+
+    onClick: function(){
+        this.props.socketService.ping();
+    },
+
+    render: function(){
+        return (
+            <input type="button" value="Ping" onClick={this.onClick} />
         );
     }
 });
@@ -275,5 +388,3 @@ var onReady = function(){
 }
 
 var socketService = new SocketService(onReady);
-
-

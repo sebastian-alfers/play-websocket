@@ -5,6 +5,10 @@
     font-size: 40px;
     text-align: center;
     line-height: 70px;
+    cursor: pointer;
+}
+.box:hover{
+    text-decoration: underline;
 }
 
 .black{
@@ -23,6 +27,7 @@
 
 .selected{
     color:#ff0000;
+    text-decoration: underline;
 }
 
 #infoLog {
@@ -33,4 +38,8 @@
 
 #infoLogContainer{
     overflow-y: scroll;
+}
+
+.error{
+    color:#ff0000;
 }

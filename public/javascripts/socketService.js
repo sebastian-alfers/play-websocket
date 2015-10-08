@@ -23,9 +23,10 @@ function SocketService(onReadyCallback) {
             connected = false;
 		};
 		ws.onmessage = function (message) {
+		    console.log(message);
             var arrayLength = onMsgInListener.length;
             for (var i = 0; i < arrayLength; i++) {
-                onMsgInListener[i](message.data);
+                onMsgInListener[i](JSON.parse(message.data));
             }
 		};
 	}
@@ -34,15 +35,27 @@ function SocketService(onReadyCallback) {
 
     function wrapMessage(msgType, msg){
         return {
-            type: msgType,
+            msgType: msgType,
             payload: msg
         }
     }
 
+    function ping(){
+        var msg = wrapMessage("pingPong", {msg: "ping"});
+        call(msg);
+    }
+
 	function setState(msg){
 	    console.log('call setState()');
-	    msg = wrapMessage("select", msg);
-	    call(msg);
+	    console.log(msg);
+	    if(undefined == msg.type){
+	        msg.type = "";
+	    }
+        var msg = wrapMessage("selectField", {pieceType: msg.type, fieldName: msg.field});
+
+        console.log(msg);
+
+        call(msg);
 	}
 
     function setPieceToField(pieceType, fieldName){
@@ -78,6 +91,7 @@ function SocketService(onReadyCallback) {
     service.addOnMsgOut = addOnMsgOut;
     service.addOnMsgIn = addOnMsgIn;
     service.setPieceToField = setPieceToField;
+    service.ping = ping;
 
     return service;
 }
