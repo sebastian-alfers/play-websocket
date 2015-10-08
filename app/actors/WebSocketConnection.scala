@@ -39,7 +39,7 @@ class WebSocketConnection(out: ActorRef) extends Actor {
 
         case "setPieceToField" => getPieceTypeFieldName(json) match {
           case Some(message) => {
-            //chessFieldActor ! message
+            chessFieldActor ! message
           }
           case None => println("Not able to parse message 'setPieceToField' ")
         }
