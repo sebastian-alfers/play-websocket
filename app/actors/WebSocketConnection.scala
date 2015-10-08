@@ -35,11 +35,6 @@ class WebSocketConnection(out: ActorRef) extends Actor {
         case "pingPong" => {
           println("got ping")
           //??
-          val json: JsValue = Json.parse("""{ "message" : "poing"}  """)
-
-          println(json.toString())
-
-          out ! json.toString()
         }
 
         case "setPieceToField" => getPieceTypeFieldName(json) match {
