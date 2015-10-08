@@ -12,6 +12,8 @@ object Messages{
 
   case class MovePieceToPosition(origField: String, newField: MovePiece)
 
+  case class PieceFieldSelected(piece: ActorRef)
+
 }
 
 object InMessages {
@@ -25,8 +27,6 @@ object InMessages {
 
   case class SelectField(msgType: String, payload: PieceTypeFieldName) extends BaseInMsg
   implicit val SelectFieldReads = Json.reads[SelectField]
-
-  case class PieceFieldSelected(piece: ActorRef)
 
 }
 
