@@ -1,6 +1,6 @@
 package actors
 
-import actors.Messages.MovePieceToPosition
+import actors.Messages.{PieceFieldSelected, MovePieceToPosition}
 import play.api.libs.json._
 import akka.actor.{ActorRef, Props, Actor}
 import InMessages._
