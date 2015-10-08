@@ -114,7 +114,7 @@ var Field = React.createClass({
 
             this.setState(
                 function(oldState){
-                    return { fieldIcon:"" };
+                    return { fieldIcon:"", pieceName: "" };
                 },
                 function(){
                     if(null != window.tmpCallback){
