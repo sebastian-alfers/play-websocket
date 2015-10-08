@@ -1,5 +1,6 @@
 package actors
 
+import actors.Messages.MovePieceToPosition
 import akka.actor.Actor.emptyBehavior
 import play.api.libs.json._
 import akka.actor.{ActorRef, Props, Actor}
@@ -55,6 +56,16 @@ class WebSocketConnection(out: ActorRef) extends Actor {
       val json = Json.toJson(msg)
       out ! json.toString()
     }
+
+    case msg: MovePieceToPosition => {
+
+      println(s"moveeee(new -> ${msg.newField.field.payload.fieldName}}) ${msg}")
+
+      val newPosition = new MovePiece(oldField = msg.origField, newField = msg.newField.field.payload.fieldName)
+      val json = Json.toJson(newPosition)
+      out ! json.toString()
+    }
+
     case a: Any => println(s"not able to process message: ${a.getClass}")
   }
 

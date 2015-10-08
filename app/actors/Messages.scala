@@ -1,7 +1,18 @@
 package actors
 
+import actors.InMessages.SelectField
 import akka.actor.ActorRef
 import play.api.libs.json._
+
+object Messages{
+  case class MovePiece(field: SelectField)
+
+  object FromChessField
+  object Unselect
+
+  case class MovePieceToPosition(origField: String, newField: MovePiece)
+
+}
 
 object InMessages {
   sealed trait BaseInMsg{val msgType: String}
@@ -17,7 +28,6 @@ object InMessages {
 
   case class PieceFieldSelected(piece: ActorRef)
 
-  object FromChessField
 }
 
 object OutMessages{
@@ -31,4 +41,6 @@ object OutMessages{
   case class PieceFieldWasSelected(override var msgType: String = "pieceFieldWasSelected") extends BaseOutMsg
   implicit val PieceFieldWasSelectedWrites = Json.writes[PieceFieldWasSelected]
 
+  case class MovePiece(override var msgType: String = "moveField", oldField: String, newField: String) extends BaseOutMsg
+  implicit val MovePieceWrites = Json.writes[MovePiece]
 }

@@ -42,7 +42,14 @@ function SocketService(onReadyCallback) {
 
 	function setState(msg){
 	    console.log('call setState()');
+	    console.log(msg);
+	    if(undefined == msg.type){
+	        msg.type = "";
+	    }
         var msg = wrapMessage("selectField", {pieceType: msg.type, fieldName: msg.field});
+
+        console.log(msg);
+
         call(msg);
 	}
 

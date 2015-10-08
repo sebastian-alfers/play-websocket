@@ -1,6 +1,7 @@
 package actors
 
 import actors.InMessages.{PieceFieldSelected, SelectField, SetPieceToField, PieceTypeFieldName}
+import actors.Messages.{Unselect, MovePiece}
 import actors.OutMessages.{BackendReady, Error}
 import akka.actor.{ActorRef, Props, Actor}
 
@@ -23,7 +24,8 @@ class ChessField extends Actor{
       val pieceType = msg.payload.pieceType.splitAt(5)._2
 
       val pieceColor = msg.payload.pieceType
-      val pieceActor = context.actorOf(Props(classOf[Piece], pieceColor, pieceType, msg.payload.fieldName))
+      val props = Props(classOf[Piece], pieceColor, pieceType, msg.payload.fieldName, context.parent)
+      val pieceActor = context.actorOf(props, s"pieceActor${pieceColor}_${pieces.length}")
       val newActors = pieceActor::pieces
 
       if(newActors.length == 32){
@@ -45,22 +47,44 @@ class ChessField extends Actor{
       //tell parent -> frontend that state has hanged
       context.parent ! msg
 
+      println(s"mutate state of chess field with selected ${msg.piece}")
+
       //change state
       context.become(receiveWithSelectedField(msg.piece, allPieces = pieces))
     }
 
-    case _ => println("not expected message")
+    case a: Any => println(s"not expected message. ${a.getClass}")
   }
 
   def receiveWithSelectedField(selectedPiece: ActorRef, allPieces: List[ActorRef]): Receive = {
     case msg: SelectField => {
-      //a piece is selected, but a new one was chosen
+      /**
+       * possible actions now:
+       * 1) the user selects a field -> move the piece there is allowed (rules)
+       * 2) another piece was selected
+       */
 
-      //change state
+      //here, we check if the piece should move
+      msg.payload.pieceType match {
+        case "" => {
+          //the message says, that the field where the user clicked, there is not "piece" -> lets move there (if possible)
+          selectedPiece ! new MovePiece(msg)
+        }
+        case _ => {
+          //the message says, that the field where the users clicks, there is a piece -> choose that peace (if allowed)
+
+          //change state
+          context.become(receiveWithPieces(allPieces))
+
+          //and lets send the message
+          self ! msg
+
+        }
+      }
+    }
+    case Unselect => {
+      println("change state to unselect current selected piece")
       context.become(receiveWithPieces(allPieces))
-
-      //and lets send the message
-      self ! msg
     }
     case a: Any => println(s"msg not expected in state selectedField: ${a.getClass}")
   }
