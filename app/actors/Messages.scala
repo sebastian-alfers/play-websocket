@@ -35,6 +35,10 @@ object OutMessages{
   case class Error(override var msgType:String = "error", message: String) extends BaseOutMsg
   implicit val ErrorWrites = Json.writes[Error]
 
+  case class Info(override var msgType:String = "info", message: String) extends BaseOutMsg
+  implicit val InfoWrites = Json.writes[Info]
+  
+  
   case class BackendReady(override var msgType: String = "backendReady") extends BaseOutMsg
   implicit val BackendReadWrites = Json.writes[BackendReady]
 

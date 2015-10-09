@@ -259,7 +259,10 @@ var Info = React.createClass({
         newLog = <span className="info">{inSign}{JSON.stringify(msg)}</span>
         if(msg.msgType == "error"){
             newLog = <span className="error">{inSign}{msg.message}</span>
+        }else if(msg.msgType == "info"){
+            newLog = <span className="info">{inSign}{msg.message}</span>
         }
+
         this.prependLog(<div>{newLog}</div>);
 
     },
